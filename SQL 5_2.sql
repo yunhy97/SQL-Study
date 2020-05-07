@@ -57,6 +57,17 @@ and outter.salary > (select avg(inner.salary)
 --서브쿼리의 결과값을 사용해서 후보행을 검증한다.
 --후보행이 남지 않을 때까지 반복한다.
 
+select to_date('20200101', 'yyyymmdd') + level -1
+from dual
+connect by level <=31;
+
+--부서아이디, 부서명, 해당부서의 사원수를 조회하기
+select outter.department_id, outter.department_name,
+    (select count(*)
+    from employees inner
+    where inner.department_id = outter.department_id) cnt
+from departments outter;
+
 
 
 
