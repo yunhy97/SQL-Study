@@ -57,16 +57,121 @@ and outter.salary > (select avg(inner.salary)
 --서브쿼리의 결과값을 사용해서 후보행을 검증한다.
 --후보행이 남지 않을 때까지 반복한다.
 
-select to_date('20200101', 'yyyymmdd') + level -1
-from dual
-connect by level <=31;
+--exists 연산자 사용하기
+--부하직원을 가지고 있는 직원을 조회하기
+select *
+from employees 상사
+where (select count(*)
+        from employees 부하
+        where 부하.manager_id = 상사.employee_id) > 0;  --count() 사용 비추천
 
---부서아이디, 부서명, 해당부서의 사원수를 조회하기
-select outter.department_id, outter.department_name,
-    (select count(*)
-    from employees inner
-    where inner.department_id = outter.department_id) cnt
-from departments outter;
+select *
+from employees 상사
+where exists (select 1
+                from employees 부하
+                where 부하.manager_id = 상사.employee_id);  --exists 사용 추천
+                
+-- with 절
+with 
+dept_costs AS   --부서이름, 부서총급여
+    (select B.department_name, sum(A.salary) as dept_total
+    from employees A, departments B
+    where A.department_id = B.department_id
+    group by B.department_name),  --가상의 테이블
+avg_cost AS     --부서별 총 급여에 대한 평균급여
+    (select sum(dept_total)/count(*) as dept_avg
+    from dept_costs)  --가상의 테이블
+select *
+from dept_costs
+where dept_total > (select dept_avg     --부서총급여가 평균급여
+                    from avg_cost)
+order by department_name;
+
+--118번 사원의 상사를 조회하기
+select employee_id, first_name, manager_id
+from employees
+start with employee_id = 118
+connect by prior manager_id=employee_id;
+
+--101번 직원의 모든 부하 조회하기
+select lpad(employee_id, level*4,' '), first_name, manager_id
+from employees
+start with employee_id = 101
+connect by prior employee_id = manager_id;
+
+--100(사장)번 직원의 부하직원 조회
+select lpad(first_name, length(first_name) + level*5-5, ' ')
+from employees
+start with employee_id = 100
+connect by prior employee_id = manager_id;
+
+--100의 모든 부하직원 조회, connect by에서 Neena는 제외(Neena의 부하도 제외)
+select lpad(first_name, length(first_name) + level*5-5, ' ')
+from employees
+start with employee_id = 100
+connect by prior employee_id = manager_id
+and first_name != 'Neena';
+
+--100의 모든 부하직원 조회, where절에서 Neena는 제외(Neena만 제외), 오류
+select lpad(first_name, length(first_name) + level*5-5, ' ')
+from employees
+where first_name != 'Neena'
+start with employee_id = 100
+connect by prior employee_id = manager_id;
+
+--100의 부하직원 조회하기
+select lpad(first_name, length(first_name) + level*5-5, ' ')
+from employees
+start with employee_id = 100
+connect by prior employee_id = manager_id 
+and level <= 2;
+
+--2020/01/01 ~ 2020/12/31날짜 만들기
+select to_date('2020/01/01','yyyy/mm/dd') + level-1
+from dual
+connect by level <= 366;
+
+--2005년도 월별 입사자 수를 조사
+select to_char(hire_date, 'yyyy-mm'), count(*)
+from employees
+where to_char(hire_date, 'yyyy') ='2003'
+group by to_char(hire_date, 'yyyy-mm')
+order by 1;
+
+with 
+months as 
+   (select '2003-' || 
+        case 
+            when level < 10 then '0' || level
+            else to_char(level)
+        end mon
+    from dual
+    connect by level <= 12),
+month_emp_count as
+    (select to_char(hire_date, 'yyyy-mm') mon, count(*) cnt
+     from employees
+     where to_char(hire_date, 'yyyy') ='2003'
+     group by to_char(hire_date, 'yyyy-mm'))
+select A.mon,nvl(B.cnt,0)
+from months A, month_emp_count B
+where A.mon = B.mon(+)
+order by 1;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
