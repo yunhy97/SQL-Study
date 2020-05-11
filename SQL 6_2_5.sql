@@ -1,4 +1,4 @@
---함수 정의하기
+--함수 정의하기1 
 --함수명
 	--get_total_order_amount
 --입력값
@@ -8,30 +8,24 @@
 create or replace function get_total_order_amount
 (i_book_no in number)
 
+--반환타입 정의
 return number
 is
-    v_amount             sample_book_orders.order_amount%type;
-    v_total_order_amount number:=0;
-    
-    cursor order_list(param_book_no number) IS
-    select order_amount
-    from sample_book_orders
-    where book_no = param_book_no;
-     
+    --총 구매수량을 저장할 변수
+    v_total_order_amount number;
 begin
-    FOR ord in order_list(i_book_no) LOOP
-        v_amount := ord.order_amount;
-        v_total_order_amount := v_total_order_amount + v_amount;
-    END LOOP;
-    
+    --총구매수량을 조회해서 변수에 담기
+    select nvl(sum(order_amount), 0)
+    into v_total_order_amount
+    from sample_book_orders
+    where book_no = i_book_no;
+    --변수에 저장된 값 반환하기
     RETURN v_total_order_amount;
-
-    commit;
 end;
 
 
 
---함수 정의하기
+--함수 정의하기2
 --함수명
 	--get_total_order_price
 --입력값
@@ -45,10 +39,24 @@ create or replace function get_total_order_price
 return number
 
 is
-    v_discount_price
-    v_book_price
-    v_order_price
-
+    v_total_order_price number;
 begin
-
+    --총구매수량 조회하기
+    select nvl(sum(order_price * order_amount),0)
+    into v_total_order_price
+    from sample_book_orders
+    where book_no = i_book_no;
+    
+    --변수에 저장된 값 반환하기
+    return v_total_order_price;
 end;
+
+
+
+
+
+
+
+
+
+
