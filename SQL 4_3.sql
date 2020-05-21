@@ -151,4 +151,3 @@ where to_char(order_registered_date, 'yyyy-mm-dd') = '2020-04-28';
 
 
 
-
