@@ -30,3 +30,16 @@ select book_no, book_title, book_writer, book_publisher, book_point, book_price,
         book_price, book_discount_price, book_likes, book_stock
 from sample_books A
 where book_no=  10010;
+
+select A.review_no, B.user_name, A.review_point, A.review_content, a.review_registered_date
+from sample_book_reviews A, sample_book_users B
+where A.user_id = B.user_id
+and A.book_no = 10004;
+
+select book_no, book_title, book_writer, book_genre, book_publisher, book_price, book_discount_price, book_registered, book_stock, book_point, book_likes
+from sample_books;
+
+delete from sample_books 
+where book_no=10020;
+
+commit;
