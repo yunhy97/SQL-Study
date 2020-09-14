@@ -68,3 +68,4 @@ values
 (reply_seq.nextval, 'hong','반가워요',1);
 
 commit;
+
